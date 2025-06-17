@@ -471,7 +471,53 @@ graph TD
 
 
 
-# 3. Improvement
+
+# 3. How to run the application
+
+## Install
+
+### Create the virtual environment
+```bash
+python -m venv venv
+```
+
+### Activate the Venv
+```bash
+// mac
+source venv/bin/activate
+
+// windows CMD
+venv\Scripts\activate.bat
+```
+
+### Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### Env
+```bash
+cp .env.example .env
+```
+update .env with correct database url
+
+### Database
+```bash
+alembic upgrade head
+```
+
+## Run the application
+
+### using Uvicorn
+```bash
+uvicorn app.main:app --reload
+```
+
+### using Docker compose
+```bash
+```
+
+# 4. Improvement
 - Security
   - Implement rate limiting
   - Add authentication
