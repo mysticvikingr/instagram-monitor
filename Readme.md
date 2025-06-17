@@ -2,7 +2,7 @@
 
 # 1. High-level Plan
 
-## a. Define Technologies and Architecture
+## A. Define Technologies and Architecture
 - FastAPI: API
 - MySQL: database
 - SQLAlchemy: ORM
@@ -11,7 +11,7 @@
 - TikHub API: Data source
 - Pytest: Testing framework
 
-## b. Data Modeling
+## B. Data Modeling
 
 ### [DB diagram](https://dbdiagram.io/d/instagram_monitor-684f982e3cc77757c8fcacd9)
 
@@ -79,7 +79,7 @@ Table task {
 
 ```
 
-## c. System Architecture
+## C. System Architecture
 
 ### Architectural Blueprint:
   - API Layer: API Backend interacts with MySQL and Redis. For user history requests, it retrieve the Redis first and use that cached results history. But if the history does not exist in Redis, then retrieve history from MySQL database and write that result to Redis Cache with dynamic TTL (time to live) as monitoring interval of that task.
@@ -140,7 +140,7 @@ graph TD
     Worker -- Writes New Metrics --> MySQL
 ```
 
-## d. API Design
+## D. API Design
 ### Influencer APIs
 #### - Create a new influencer monitoring task.
 - method: `POST`
@@ -168,7 +168,7 @@ graph TD
 
 #### - Retrieve historical data for a monitored user.
 - method: `GET`
-- url: `/api/v1/instagram/influencer_monitor/user_history/{user_id}`
+- url: `/api/v1/instagram/influencer_monitor/user_history/{user_name}`
 - Success response
 ```json
 {
@@ -505,6 +505,9 @@ update .env with correct database url
 ```bash
 alembic upgrade head
 ```
+
+### Redis
+making sure Redis server is running
 
 ## Run the application
 
