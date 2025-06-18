@@ -522,6 +522,7 @@ uvicorn app.main:app --reload
 ```bash
 celery -A app.celery_app beat --loglevel=info
 ```
+To see Swagger doc for API [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ### Run Celery Worker
 ```bash
@@ -538,6 +539,17 @@ celery -A app.celery_app worker -P gevent --loglevel=info
 ```
 
 # 4. Improvement
+- Docker
+  - add Dockerfile
+  - Docker Compose
+    - Redis
+    - MySQL
+    - FastAPI server
+    - Celery Scheduler Beat
+    - Celery Worker
+- Testing
+  - Unit testing
+  - Integration Testing for Tikhub api integration
 - Security
   - Implement rate limiting
   - Add authentication

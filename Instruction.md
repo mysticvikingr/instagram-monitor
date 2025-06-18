@@ -1,4 +1,5 @@
 # Instagram influencer + Post monitor with TikHub API
+[Notion](https://www.notion.so/Instagram-Influencer-Post-Monitor-with-TikHub-API-3days-2120b6d0767780ceb666d14cd26ee323?source=copy_link)
 
 Your task is to build a lightweight monitoring service using TikHub's API, with Redis, Celery, FastAPI, and MySQL. You'll deploy two features: Instagram Influencer Monitor and Post Monitor. All data is stored locally in MySQL and Redis, and exposed via FastAPI endpoints.
 
