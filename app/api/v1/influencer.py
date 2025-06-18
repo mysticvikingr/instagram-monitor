@@ -25,9 +25,9 @@ def create_monitor_task(
     """
     Create a new influencer monitoring task.
     """
-    task = service.create_monitor_task(task_data)
     if service.get_task_by_username(task_data.username):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Task with that username already exists")
+    task = service.create_monitor_task(task_data)
     return Response(
         status_code=status.HTTP_201_CREATED,
         data=CreateMonitorTaskData(
