@@ -39,6 +39,22 @@ class InfluencerService:
         self.db.refresh(new_task)
         return new_task
 
+    async def create_metrics_history(self, username: str, metrics: dict):
+        new_history = InfluencerMetricsHistory(
+            username=username,
+            user_id=int(metrics.get("id")),
+            bio=metrics.get("biography"),
+            follower_count=metrics.get("follower_count", 0),
+            following_count=metrics.get("following_count", 0),
+            post_count=metrics.get("media_count", 0)
+        )
+        self.db.add(new_history)
+        self.db.commit()
+
+        # Invalidate cache
+        cache_key = f"user_history:{username}"
+        await self.redis_client.delete(cache_key)
+
     async def get_user_history(self, username: str) -> List[InfluencerMetricsHistory]:
         cache_key = f"user_history:{username}"
         cached_history = await self.redis_client.get(cache_key)

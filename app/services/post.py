@@ -36,6 +36,21 @@ class PostService:
         self.db.refresh(new_task)
         return new_task
 
+    async def create_metrics_history(self, post_code: str, metrics: dict):
+        new_history = PostMetricsHistory(
+            post_id=int(metrics.get("id")),
+            post_code=post_code,
+            like_count=metrics.get("like_count", 0),
+            comment_count=metrics.get("comment_count", 0),
+            play_count=metrics.get("play_count")
+        )
+        self.db.add(new_history)
+        self.db.commit()
+
+        # Invalidate cache
+        cache_key = f"post_history:{post_code}"
+        await self.redis_client.delete(cache_key)
+
     async def get_video_history(self, post_code: str) -> List[PostMetricsHistory]:
         cache_key = f"post_history:{post_code}"
         print(f"cache_key: {cache_key}")

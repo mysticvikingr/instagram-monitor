@@ -83,13 +83,17 @@ Table task {
 
 ### Architectural Blueprint:
   - API Layer: API Backend interacts with MySQL and Redis. For user history requests, it retrieve the Redis first and use that cached results history. But if the history does not exist in Redis, then retrieve history from MySQL database and write that result to Redis Cache with dynamic TTL (time to live) as monitoring interval of that task.
-  And for pausing task request, it set that task pause flag as true in Redis and update status in the MySQL database.
-  - Celery Beat Scheduler: Scheduler should be run in every scheduled timeframe and retrieve task for that schedule timeframe from MySQL and sent those tasks to Redis broker.
+  - Celery Beat Scheduler: Scheduler should be run in every scheduled timeframe and push to Redis broker.
   - Redis as broker: This used for asynchronous communication between Celery Beat Scheduler and Celery worker.
-  - Celery Worker: This subscribe scheduled tasks from Redis broker and execute that task. Before start executing the task, worker first check the paused flag of that task from Redis, and if that flag is true in Redis, then stop executing that task and move on to others. While executing tasks, worker fetch the instagram data from TikHub API. and after successful data retrieval, worker store that response data to Redis cache with dynamic TTL like (3 * interval) so that we can use that data as fallback when we failed from TikHub API because of rate limit or downtime. and after successful retrieve for the certain data from data source, worker try to delete record for that response key from Redis history cache if it's already set from the API for cache invalidation purpose. Eventually update history data in MySQL.
+  - Celery Worker: This subscribe scheduled tasks from Redis broker and execute that task. 
+    - Worker retrieve the tasks from Mysql which have that timeframe as interval. 
+    - Fetch instagram data from Tikhub API
+    - If it's successful, then store that response to Redis Cache as fallback with dynamic TTL (3 * interval).
+    - If it's failed, then retrieve response from Redis Cache Fallback.
+    - Update history data in MySQL
+    - Try to delete record for that response key from Redis history Cache if it's already set from the API.
   - MySQL Database: permanent source of truth
-  - Redis as Caching and state management: used for Cache of user history or post history data with dynamic TTL to optimize the history data retrieval from API. And also used Cache as fallback method for Tikhub api response. 
-  used to store the paused state of the tasks so that we can quickly stop the task execution from worker. 
+  - Redis as Caching and state management: used for Cache of user history or post history data with dynamic TTL to optimize the history data retrieval from API. And also used Cache as fallback method for Tikhub api response.
   - External API Integration (TikHub): external data source
 
 ### Data Flow
@@ -110,7 +114,6 @@ graph TD
             subgraph "Redis Cache & State"
                 RedisAPICache[API Cache]
                 RedisFallbackCache[Tikhub Fallback Cache]
-                RedisPausedTaskFlag[Task Paused Flag]
             end
             
             MySQL[MySQL DB]
@@ -126,18 +129,17 @@ graph TD
     User -- HTTP Requests --> API
 
     API -- Reads/Writes API Cache --> RedisAPICache
-    API -- Manages Pause State --> RedisPausedTaskFlag
     API -- Reads/Writes Data --> MySQL
 
-    Scheduler -- Reads Schedules --> MySQL
-    Scheduler -- Sends Tasks --> RedisBroker
+    Scheduler -- Execute Tasks --> RedisBroker
     
-    Worker -- Get Tasks --> RedisBroker
-    Worker -- Check Paused Task Flag --> RedisPausedTaskFlag
+    RedisBroker -- Get Tasks --> Worker
+    Worker -- Reads Tasks --> MySQL
     Worker -- Fetch Data --> TikHub
     Worker -- Response Fallback --> RedisFallbackCache
     Worker -- Invalidate API Caches --> RedisAPICache
     Worker -- Writes New Metrics --> MySQL
+
 ```
 
 ## D. API Design
@@ -509,11 +511,26 @@ alembic upgrade head
 ### Redis
 making sure Redis server is running
 
-## Run the application
+## Run application
 
-### using Uvicorn
+### Run FastAPI server
 ```bash
 uvicorn app.main:app --reload
+```
+
+### Run Celery Scheduler
+```bash
+celery -A app.celery_app beat --loglevel=info
+```
+
+### Run Celery Worker
+```bash
+celery -A app.celery_app worker --loglevel=info
+```
+
+```bash
+// windows
+celery -A app.celery_app worker -P gevent --loglevel=info
 ```
 
 ### using Docker compose
